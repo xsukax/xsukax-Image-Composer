@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xsukax Image Composer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header .brand { font-size: 0.9rem; color: #007aff; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+        .header h1 { font-size: 2.8rem; font-weight: 800; background: linear-gradient(135deg, #007aff, #5856d6, #af52de); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px; }
+        .header p { font-size: 1.1rem; color: #86868b; max-width: 600px; margin: 0 auto; }
+        .project-controls { background: white; border-radius: 18px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .project-controls h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #1d1d1f; }
+        .project-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .project-btn { padding: 15px 20px; border: none; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; text-align: center; position: relative; }
+        .project-btn.new { background: linear-gradient(135deg, #007aff, #5856d6); color: white; }
+        .project-btn.new:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,122,255,0.4); }
+        .project-btn.save { background: linear-gradient(135deg, #ff9500, #ff6b35); color: white; }
+        .project-btn.save:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,149,0,0.4); }
+        .project-btn.load { background: linear-gradient(135deg, #34c759, #30d158); color: white; }
+        .project-btn.load:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(52,199,89,0.4); }
+        .project-btn:disabled { background: #d1d1d6; color: #86868b; cursor: not-allowed; transform: none; box-shadow: none; }
+        .project-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .upload-section { background: white; border-radius: 18px; padding: 32px; margin-bottom: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .file-input-wrapper { position: relative; display: block; width: 100%; }
+        .file-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
+        .file-input-button { display: block; background: linear-gradient(135deg, #007aff, #5856d6); color: white; padding: 20px 35px; border-radius: 14px; text-align: center; font-weight: 600; font-size: 16px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; cursor: pointer; }
+        .file-input-button:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(0,122,255,0.4); }
+        .file-input-button:active { transform: translateY(-1px); }
+        .image-list { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px; }
+        .image-item { position: relative; background: #f8f9fa; border-radius: 14px; overflow: hidden; aspect-ratio: 1; transition: all 0.3s ease; border: 2px solid transparent; }
+        .image-item:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); border-color: #007aff; }
+        .image-item img { width: 100%; height: 100%; object-fit: cover; }
+        .image-controls { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.85)); padding: 14px; }
+        .control-btn { background: rgba(255,255,255,0.95); border: none; border-radius: 7px; padding: 8px 14px; margin: 3px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .control-btn:hover { background: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .control-btn.active { background: #007aff; color: white; }
+        .control-btn.active:hover { background: #0051d5; }
+        .text-section { background: white; border-radius: 18px; padding: 32px; margin-bottom: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .text-section h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #1d1d1f; }
+        .text-input-form { display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: end; margin-bottom: 20px; }
+        .text-input-group { display: flex; flex-direction: column; gap: 8px; }
+        .text-input { width: 100%; padding: 12px 16px; border: 2px solid #e5e5e7; border-radius: 10px; font-size: 16px; transition: all 0.2s ease; }
+        .text-input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        .text-options { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: center; margin-bottom: 15px; }
+        .font-select, .color-input { padding: 10px; border: 2px solid #e5e5e7; border-radius: 8px; font-size: 14px; }
+        .font-select:focus, .color-input:focus { outline: none; border-color: #007aff; }
+        .color-input { width: 60px; height: 40px; cursor: pointer; }
+        .add-text-btn { background: linear-gradient(135deg, #ff9500, #ff6b35); color: white; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .add-text-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,149,0,0.4); }
+        .text-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .text-item { background: #f8f9fa; border-radius: 12px; padding: 15px; border: 2px solid transparent; transition: all 0.2s ease; }
+        .text-item:hover { border-color: #ff9500; }
+        .text-preview { font-size: 18px; font-weight: 600; margin-bottom: 10px; word-break: break-word; }
+        .text-item-controls { display: flex; gap: 8px; }
+        .text-control-btn { background: #007aff; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s ease; }
+        .text-control-btn:hover { background: #0051d5; }
+        .text-control-btn.delete { background: #ff3b30; }
+        .text-control-btn.delete:hover { background: #d70015; }
+        .workspace { background: white; border-radius: 18px; padding: 28px; min-height: 520px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        .canvas-container { position: relative; width: 100%; height: 520px; border: 3px dashed #d1d1d6; border-radius: 14px; overflow: hidden; background: #fafafa; transition: border-color 0.3s ease; }
+        .canvas-container:hover { border-color: #007aff; }
+        .background-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; }
+        .overlay-image { position: absolute; cursor: move; z-index: 10; border: 2px solid transparent; border-radius: 6px; transition: all 0.2s ease; }
+        .overlay-image:hover { border-color: #007aff; box-shadow: 0 6px 20px rgba(0,122,255,0.25); }
+        .overlay-image.selected { border-color: #007aff; box-shadow: 0 8px 30px rgba(0,122,255,0.35); }
+        .overlay-image img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; border-radius: 4px; }
+        .overlay-text { position: absolute; cursor: move; z-index: 10; border: 2px solid transparent; border-radius: 6px; transition: all 0.2s ease; padding: 8px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); user-select: none; }
+        .overlay-text:hover { border-color: #ff9500; box-shadow: 0 6px 20px rgba(255,149,0,0.25); }
+        .overlay-text.selected { border-color: #ff9500; box-shadow: 0 8px 30px rgba(255,149,0,0.35); }
+        .overlay-text .text-content { pointer-events: none; white-space: nowrap; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .resize-handle { position: absolute; width: 16px; height: 16px; background: #007aff; border: 3px solid white; border-radius: 50%; box-shadow: 0 3px 12px rgba(0,0,0,0.25); transition: all 0.2s ease; z-index: 20; }
+        .resize-handle:hover { transform: scale(1.3); background: #0051d5; }
+        .resize-handle.top-left { top: -8px; left: -8px; cursor: nw-resize; }
+        .resize-handle.top-right { top: -8px; right: -8px; cursor: ne-resize; }
+        .resize-handle.bottom-left { bottom: -8px; left: -8px; cursor: sw-resize; }
+        .resize-handle.bottom-right { bottom: -8px; right: -8px; cursor: se-resize; }
+        .text-resize-handle { background: #ff9500; }
+        .text-resize-handle:hover { background: #e6840e; }
+        .export-section { margin-top: 32px; text-align: center; }
+        .export-btn { background: linear-gradient(135deg, #34c759, #30d158); color: white; padding: 20px 50px; border: none; border-radius: 14px; font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .export-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(52,199,89,0.4); }
+        .export-btn:active { transform: translateY(-1px); }
+        .export-btn:disabled { background: #d1d1d6; cursor: not-allowed; transform: none; box-shadow: none; }
+        .empty-state { text-align: center; padding: 100px 30px; color: #86868b; }
+        .empty-state-icon { font-size: 5rem; margin-bottom: 30px; display: block; }
+        .empty-state h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 12px; color: #1d1d1f; }
+        .empty-state p { font-size: 1rem; margin-bottom: 8px; }
+        .empty-state small { font-size: 0.9rem; opacity: 0.8; display: block; margin-bottom: 4px; }
+        .resolution-info { background: linear-gradient(135deg, #f0f8ff, #e6f3ff); border: 2px solid #007aff; border-radius: 12px; padding: 18px; margin-top: 24px; color: #007aff; }
+        .resolution-info strong { font-weight: 700; }
+        .resolution-info small { display: block; margin-top: 8px; opacity: 0.8; }
+        .project-info { background: linear-gradient(135deg, #fff3e0, #ffe0b3); border: 2px solid #ff9500; border-radius: 12px; padding: 18px; margin-top: 15px; color: #e65100; }
+        .project-info strong { font-weight: 700; }
+        .project-info small { display: block; margin-top: 8px; opacity: 0.9; }
+        .aspect-ratio-indicator { position: absolute; top: 6px; right: 6px; background: rgba(0,122,255,0.9); color: white; padding: 3px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; z-index: 25; }
+        .text-indicator { background: rgba(255,149,0,0.9); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background: white; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transition: all 0.3s ease; }
+        .modal-overlay.active .modal { transform: translate(-50%, -50%) scale(1); }
+        .modal h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; color: #1d1d1f; }
+        .modal-input { width: 100%; padding: 15px; border: 2px solid #e5e5e7; border-radius: 10px; font-size: 16px; margin-bottom: 20px; transition: all 0.2s ease; }
+        .modal-input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .modal-btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .modal-btn.cancel { background: #f1f3f4; color: #5f6368; }
+        .modal-btn.cancel:hover { background: #e8eaed; }
+        .modal-btn.confirm { background: #007aff; color: white; }
+        .modal-btn.confirm:hover { background: #0051d5; }
+        .progress-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 2000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .progress-overlay.active { opacity: 1; visibility: visible; }
+        .progress-content { background: white; border-radius: 16px; padding: 40px; text-align: center; max-width: 400px; width: 90%; }
+        .progress-content h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #1d1d1f; }
+        .progress-bar { width: 100%; height: 8px; background: #e5e5e7; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
+        .progress-fill { height: 100%; background: linear-gradient(135deg, #007aff, #5856d6); border-radius: 4px; transition: width 0.3s ease; }
+        .notification { position: fixed; top: 20px; right: 20px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 1500; transform: translateX(400px); transition: all 0.3s ease; max-width: 350px; }
+        .notification.active { transform: translateX(0); }
+        .notification.success { border-left: 4px solid #34c759; }
+        .notification.error { border-left: 4px solid #ff3b30; }
+        .notification h4 { font-weight: 700; margin-bottom: 8px; }
+        .notification p { font-size: 14px; color: #86868b; }
+        @media (max-width: 768px) { .container { padding: 16px; } .header h1 { font-size: 2.2rem; } .image-list, .text-list { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; } .canvas-container { height: 400px; } .upload-section, .workspace, .text-section, .project-controls { padding: 24px; } .export-btn { padding: 18px 40px; font-size: 16px; } .text-input-form { grid-template-columns: 1fr; } .text-options { grid-template-columns: 1fr 1fr; } .project-buttons { grid-template-columns: 1fr; } .modal { padding: 25px; } }
+        @media (max-width: 480px) { .header h1 { font-size: 1.8rem; } .canvas-container { height: 320px; } .upload-section, .workspace, .text-section, .project-controls { padding: 20px; } .text-options { grid-template-columns: 1fr; } .modal { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>xsukax Image Composer</h1>
+            <p>Professional image composition tool with project management</p>
+        </div>
+
+        <div class="project-controls">
+            <h3>💼 Project Management</h3>
+            <div class="project-buttons">
+                <button class="project-btn new" onclick="composer.newProject()">🆕 New Project</button>
+                <button id="saveProjectBtn" class="project-btn save" onclick="composer.saveProject()" disabled>💾 Save Project</button>
+                <div class="project-btn load" style="position: relative;">
+                    <input type="file" id="projectInput" class="project-input" accept=".xic" onchange="composer.loadProject(event)">
+                    📂 Load Project
+                </div>
+            </div>
+            <div id="projectInfo" class="project-info" style="display: none;">
+                <strong>Current Project:</strong> <span id="projectName"></span>
+                <small>💡 Save your project to preserve all images, text overlays, and positioning</small>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="imageInput" class="file-input" multiple accept="image/jpeg,image/png,image/jpg">
+                <label for="imageInput" class="file-input-button">Choose Images (JPG, PNG)</label>
+            </div>
+            <div id="imageList" class="image-list"></div>
+            <div id="resolutionInfo" class="resolution-info" style="display: none;">
+                <strong>Export Resolution:</strong> <span id="resolutionText"></span>
+                <small>✨ Perfect positioning and aspect ratio preservation for images and text</small>
+            </div>
+        </div>
+
+        <div class="text-section">
+            <h3>📝 Text Overlays</h3>
+            <div class="text-input-form">
+                <div class="text-input-group">
+                    <input type="text" id="textInput" class="text-input" placeholder="Enter your text..." maxlength="100">
+                </div>
+                <button id="addTextBtn" class="add-text-btn">Add Text</button>
+            </div>
+            <div class="text-options">
+                <select id="fontSelect" class="font-select">
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="'Times New Roman', serif">Times New Roman</option>
+                    <option value="'Helvetica Neue', sans-serif">Helvetica</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="'Courier New', monospace">Courier New</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                    <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    <option value="Impact, sans-serif">Impact</option>
+                    <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                    <option value="'Palatino Linotype', serif">Palatino</option>
+                    <option value="'Lucida Console', monospace">Lucida Console</option>
+                    <option value="'Franklin Gothic Medium', sans-serif">Franklin Gothic</option>
+                </select>
+                <input type="color" id="textColor" class="color-input" value="#ffffff">
+                <span style="font-size: 14px; color: #86868b;">Font & Color</span>
+            </div>
+            <div id="textList" class="text-list"></div>
+        </div>
+
+        <div class="workspace">
+            <div id="canvasContainer" class="canvas-container">
+                <div class="empty-state">
+                    <span class="empty-state-icon">🎨</span>
+                    <h3>Start Your Composition</h3>
+                    <p>Select a background image to begin</p>
+                    <small>Add images and text overlays</small>
+                    <small>Save and load complete projects</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <button id="exportBtn" class="export-btn" disabled>Export Perfect Composition</button>
+        </div>
+    </div>
+
+    <!-- Edit Text Modal -->
+    <div id="editTextModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Edit Text</h3>
+            <input type="text" id="editTextInput" class="modal-input" placeholder="Enter new text..." maxlength="100">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="composer.closeEditModal()">Cancel</button>
+                <button class="modal-btn confirm" onclick="composer.confirmEditText()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progressModal" class="progress-overlay">
+        <div class="progress-content">
+            <h3 id="progressTitle">Processing...</h3>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="progressText">Please wait...</p>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <h4 id="notificationTitle"></h4>
+        <p id="notificationMessage"></p>
+    </div>
+
+    <script>
+        class XsukaxImageComposer {
+            constructor() {
+                this.images = new Map();
+                this.backgroundImage = null;
+                this.overlayImages = [];
+                this.textOverlays = [];
+                this.selectedOverlay = null;
+                this.selectedText = null;
+                this.isDragging = false;
+                this.isResizing = false;
+                this.dragStart = { x: 0, y: 0 };
+                this.resizeData = null;
+                this.editingTextId = null;
+                this.projectName = 'Untitled Project';
+                this.projectModified = false;
+                
+                this.backgroundDisplay = {
+                    naturalWidth: 0,
+                    naturalHeight: 0,
+                    displayWidth: 0,
+                    displayHeight: 0,
+                    offsetX: 0,
+                    offsetY: 0,
+                    scale: 1
+                };
+                
+                this.containerRect = null;
+                this.backgroundElement = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateContainerRect();
+                this.updateProjectInfo();
+                
+                window.addEventListener('resize', () => {
+                    this.updateContainerRect();
+                    this.recalculateBackgroundDisplay();
+                });
+
+                // Auto-hide notifications
+                setTimeout(() => {
+                    this.showNotification('success', 'Welcome!', 'Start by creating a new project or loading an existing one.');
+                }, 1000);
+            }
+
+            setupEventListeners() {
+                document.getElementById('imageInput').addEventListener('change', (e) => this.handleFileUpload(e));
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportComposition());
+                document.getElementById('addTextBtn').addEventListener('click', () => this.addTextOverlay());
+                document.getElementById('textInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTextOverlay();
+                });
+                
+                // Modal event listeners
+                document.getElementById('editTextInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.confirmEditText();
+                });
+                
+                document.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
+                document.addEventListener('pointermove', (e) => this.handlePointerMove(e));
+                document.addEventListener('pointerup', (e) => this.handlePointerUp(e));
+                document.addEventListener('pointercancel', (e) => this.handlePointerUp(e));
+                
+                document.addEventListener('touchstart', (e) => {
+                    if (e.target.closest('.overlay-image') || e.target.closest('.overlay-text') || e.target.closest('.resize-handle')) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                document.addEventListener('touchmove', (e) => {
+                    if (this.isDragging || this.isResizing) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                // Close modal on overlay click
+                document.getElementById('editTextModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) {
+                        this.closeEditModal();
+                    }
+                });
+
+                // Project modified tracking
+                const trackModification = () => {
+                    this.projectModified = true;
+                    this.updateProjectInfo();
+                };
+
+                document.getElementById('textInput').addEventListener('input', trackModification);
+                document.getElementById('fontSelect').addEventListener('change', trackModification);
+                document.getElementById('textColor').addEventListener('change', trackModification);
+            }
+
+            // PROJECT MANAGEMENT
+            newProject() {
+                if (this.projectModified && !confirm('You have unsaved changes. Create a new project anyway?')) {
+                    return;
+                }
+
+                this.images.clear();
+                this.backgroundImage = null;
+                this.overlayImages = [];
+                this.textOverlays = [];
+                this.projectName = 'Untitled Project';
+                this.projectModified = false;
+
+                this.renderImageList();
+                this.renderTextList();
+                this.renderCanvas();
+                this.updateProjectInfo();
+                this.updateExportButton();
+
+                this.showNotification('success', 'New Project', 'Started a fresh project. Begin by adding a background image.');
+            }
+
+            async saveProject() {
+                if (!this.backgroundImage && this.overlayImages.length === 0 && this.textOverlays.length === 0) {
+                    this.showNotification('error', 'Nothing to Save', 'Add some content to your project first.');
+                    return;
+                }
+
+                this.showProgress('Saving Project', 'Preparing project data...', 0);
+
+                try {
+                    const projectData = {
+                        version: '1.0.0',
+                        appName: 'xsukax Image Composer',
+                        created: new Date().toISOString(),
+                        modified: new Date().toISOString(),
+                        projectName: this.projectName,
+                        canvas: {
+                            width: this.containerRect?.width || 800,
+                            height: this.containerRect?.height || 520
+                        },
+                        background: null,
+                        overlays: {
+                            images: [],
+                            texts: [...this.textOverlays]
+                        }
+                    };
+
+                    // Add background image
+                    if (this.backgroundImage) {
+                        this.updateProgress('Saving Project', 'Processing background image...', 20);
+                        projectData.background = {
+                            id: this.backgroundImage.id,
+                            src: this.backgroundImage.src,
+                            name: this.backgroundImage.name,
+                            naturalWidth: this.backgroundImage.naturalWidth,
+                            naturalHeight: this.backgroundImage.naturalHeight,
+                            aspectRatio: this.backgroundImage.aspectRatio
+                        };
+                    }
+
+                    // Add overlay images
+                    for (let i = 0; i < this.overlayImages.length; i++) {
+                        const overlay = this.overlayImages[i];
+                        this.updateProgress('Saving Project', `Processing overlay ${i + 1}/${this.overlayImages.length}...`, 30 + (i / this.overlayImages.length) * 50);
+                        
+                        projectData.overlays.images.push({
+                            id: overlay.id,
+                            imageData: {
+                                id: overlay.imageData.id,
+                                src: overlay.imageData.src,
+                                name: overlay.imageData.name,
+                                naturalWidth: overlay.imageData.naturalWidth,
+                                naturalHeight: overlay.imageData.naturalHeight,
+                                aspectRatio: overlay.imageData.aspectRatio
+                            },
+                            x: overlay.x,
+                            y: overlay.y,
+                            width: overlay.width,
+                            height: overlay.height,
+                            aspectRatio: overlay.aspectRatio,
+                            rotation: overlay.rotation
+                        });
+                    }
+
+                    this.updateProgress('Saving Project', 'Finalizing project file...', 90);
+
+                    // Create and download project file
+                    const projectJson = JSON.stringify(projectData, null, 2);
+                    const blob = new Blob([projectJson], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${this.projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xic`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    this.updateProgress('Saving Project', 'Project saved successfully!', 100);
+                    
+                    setTimeout(() => {
+                        this.hideProgress();
+                        this.projectModified = false;
+                        this.updateProjectInfo();
+                        this.showNotification('success', 'Project Saved', `${this.projectName} has been saved successfully.`);
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Save failed:', error);
+                    this.hideProgress();
+                    this.showNotification('error', 'Save Failed', 'Failed to save project. Please try again.');
+                }
+            }
+
+            async loadProject(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!file.name.endsWith('.xic')) {
+                    this.showNotification('error', 'Invalid File', 'Please select a valid xsukax project file (.xic).');
+                    return;
+                }
+
+                if (this.projectModified && !confirm('You have unsaved changes. Load project anyway?')) {
+                    event.target.value = '';
+                    return;
+                }
+
+                this.showProgress('Loading Project', 'Reading project file...', 0);
+
+                try {
+                    const fileContent = await this.readFileAsText(file);
+                    const projectData = JSON.parse(fileContent);
+
+                    // Validate project file
+                    if (!this.validateProjectData(projectData)) {
+                        throw new Error('Invalid project file format');
+                    }
+
+                    this.updateProgress('Loading Project', 'Clearing current project...', 10);
+
+                    // Clear current project
+                    this.images.clear();
+                    this.backgroundImage = null;
+                    this.overlayImages = [];
+                    this.textOverlays = [];
+
+                    this.updateProgress('Loading Project', 'Loading background image...', 20);
+
+                    // Load background
+                    if (projectData.background) {
+                        const bgImageData = {
+                            id: projectData.background.id,
+                            src: projectData.background.src,
+                            name: projectData.background.name,
+                            naturalWidth: projectData.background.naturalWidth,
+                            naturalHeight: projectData.background.naturalHeight,
+                            aspectRatio: projectData.background.aspectRatio
+                        };
+                        this.images.set(bgImageData.id, bgImageData);
+                        this.backgroundImage = bgImageData;
+                    }
+
+                    this.updateProgress('Loading Project', 'Loading overlay images...', 40);
+
+                    // Load overlay images
+                    for (let i = 0; i < projectData.overlays.images.length; i++) {
+                        const overlayData = projectData.overlays.images[i];
+                        this.updateProgress('Loading Project', `Loading overlay ${i + 1}/${projectData.overlays.images.length}...`, 40 + (i / projectData.overlays.images.length) * 30);
+                        
+                        // Add image to images map if not exists
+                        if (!this.images.has(overlayData.imageData.id)) {
+                            this.images.set(overlayData.imageData.id, overlayData.imageData);
+                        }
+
+                        // Create overlay
+                        this.overlayImages.push({
+                            id: overlayData.id,
+                            imageData: overlayData.imageData,
+                            x: overlayData.x,
+                            y: overlayData.y,
+                            width: overlayData.width,
+                            height: overlayData.height,
+                            aspectRatio: overlayData.aspectRatio,
+                            rotation: overlayData.rotation
+                        });
+                    }
+
+                    this.updateProgress('Loading Project', 'Loading text overlays...', 80);
+
+                    // Load text overlays
+                    this.textOverlays = [...projectData.overlays.texts];
+
+                    // Update project info
+                    this.projectName = projectData.projectName || 'Loaded Project';
+                    this.projectModified = false;
+
+                    this.updateProgress('Loading Project', 'Rendering project...', 95);
+
+                    // Render everything
+                    this.renderImageList();
+                    this.renderTextList();
+                    this.renderCanvas();
+                    this.updateResolutionInfo();
+                    this.updateProjectInfo();
+                    this.updateExportButton();
+
+                    this.updateProgress('Loading Project', 'Project loaded successfully!', 100);
+
+                    setTimeout(() => {
+                        this.hideProgress();
+                        this.showNotification('success', 'Project Loaded', `${this.projectName} has been loaded successfully.`);
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Load failed:', error);
+                    this.hideProgress();
+                    this.showNotification('error', 'Load Failed', 'Failed to load project. The file may be corrupted or invalid.');
+                }
+
+                event.target.value = '';
+            }
+
+            validateProjectData(data) {
+                return data && 
+                       data.version && 
+                       data.appName === 'xsukax Image Composer' &&
+                       data.overlays &&
+                       Array.isArray(data.overlays.images) &&
+                       Array.isArray(data.overlays.texts);
+            }
+
+            readFileAsText(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsText(file);
+                });
+            }
+
+            updateProjectInfo() {
+                const projectInfo = document.getElementById('projectInfo');
+                const projectNameSpan = document.getElementById('projectName');
+                const saveBtn = document.getElementById('saveProjectBtn');
+
+                projectNameSpan.textContent = this.projectName + (this.projectModified ? ' (Modified)' : '');
+                projectInfo.style.display = 'block';
+                saveBtn.disabled = false;
+            }
+
+            // PROGRESS AND NOTIFICATIONS
+            showProgress(title, message, progress) {
+                const modal = document.getElementById('progressModal');
+                const titleEl = document.getElementById('progressTitle');
+                const textEl = document.getElementById('progressText');
+                const fillEl = document.getElementById('progressFill');
+
+                titleEl.textContent = title;
+                textEl.textContent = message;
+                fillEl.style.width = progress + '%';
+                modal.classList.add('active');
+            }
+
+            updateProgress(title, message, progress) {
+                const titleEl = document.getElementById('progressTitle');
+                const textEl = document.getElementById('progressText');
+                const fillEl = document.getElementById('progressFill');
+
+                titleEl.textContent = title;
+                textEl.textContent = message;
+                fillEl.style.width = progress + '%';
+            }
+
+            hideProgress() {
+                const modal = document.getElementById('progressModal');
+                modal.classList.remove('active');
+            }
+
+            showNotification(type, title, message) {
+                const notification = document.getElementById('notification');
+                const titleEl = document.getElementById('notificationTitle');
+                const messageEl = document.getElementById('notificationMessage');
+
+                notification.className = `notification ${type}`;
+                titleEl.textContent = title;
+                messageEl.textContent = message;
+                notification.classList.add('active');
+
+                setTimeout(() => {
+                    notification.classList.remove('active');
+                }, 4000);
+            }
+
+            // REST OF THE EXISTING METHODS (keeping all previous functionality)
+            updateContainerRect() {
+                const container = document.getElementById('canvasContainer');
+                if (container) {
+                    this.containerRect = container.getBoundingClientRect();
+                }
+            }
+
+            async handleFileUpload(event) {
+                const files = Array.from(event.target.files);
+                
+                for (const file of files) {
+                    if (this.isValidImage(file)) {
+                        try {
+                            const imageData = await this.loadImageData(file);
+                            this.images.set(imageData.id, imageData);
+                            this.projectModified = true;
+                        } catch (error) {
+                            console.error('Failed to load image:', error);
+                        }
+                    }
+                }
+                
+                this.renderImageList();
+                this.updateProjectInfo();
+            }
+
+            isValidImage(file) {
+                return ['image/jpeg', 'image/jpg', 'image/png'].includes(file.type);
+            }
+
+            loadImageData(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            resolve({
+                                id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                src: e.target.result,
+                                name: file.name,
+                                file: file,
+                                naturalWidth: img.naturalWidth,
+                                naturalHeight: img.naturalHeight,
+                                aspectRatio: img.naturalWidth / img.naturalHeight
+                            });
+                        };
+                        img.onerror = reject;
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            renderImageList() {
+                const container = document.getElementById('imageList');
+                container.innerHTML = '';
+
+                this.images.forEach(imageData => {
+                    const item = document.createElement('div');
+                    item.className = 'image-item';
+                    
+                    const isBackground = this.backgroundImage?.id === imageData.id;
+                    
+                    item.innerHTML = `
+                        <img src="${imageData.src}" alt="${imageData.name}">
+                        <div class="image-controls">
+                            <button class="control-btn ${isBackground ? 'active' : ''}" 
+                                    onclick="composer.setBackground('${imageData.id}')">Background</button>
+                            <button class="control-btn" 
+                                    onclick="composer.addOverlay('${imageData.id}')">Overlay</button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
+
+            addTextOverlay() {
+                const textInput = document.getElementById('textInput');
+                const fontSelect = document.getElementById('fontSelect');
+                const colorInput = document.getElementById('textColor');
+                
+                const text = textInput.value.trim();
+                if (!text) return;
+
+                const textOverlay = {
+                    id: `text_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    text: text,
+                    x: 60,
+                    y: 60,
+                    fontSize: 24,
+                    fontFamily: fontSelect.value,
+                    color: colorInput.value,
+                    rotation: 0
+                };
+
+                this.textOverlays.push(textOverlay);
+                textInput.value = '';
+                this.projectModified = true;
+                this.renderTextList();
+                this.renderCanvas();
+                this.updateExportButton();
+                this.updateProjectInfo();
+            }
+
+            renderTextList() {
+                const container = document.getElementById('textList');
+                container.innerHTML = '';
+
+                this.textOverlays.forEach(textOverlay => {
+                    const item = document.createElement('div');
+                    item.className = 'text-item';
+                    
+                    item.innerHTML = `
+                        <div class="text-preview" style="color: ${textOverlay.color}; font-family: ${textOverlay.fontFamily};">
+                            "${textOverlay.text}"
+                        </div>
+                        <div class="text-item-controls">
+                            <button class="text-control-btn" onclick="composer.editTextOverlay('${textOverlay.id}')">Edit</button>
+                            <button class="text-control-btn delete" onclick="composer.removeTextOverlay('${textOverlay.id}')">Delete</button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
+
+            editTextOverlay(textId) {
+                const textOverlay = this.textOverlays.find(t => t.id === textId);
+                if (!textOverlay) return;
+
+                this.editingTextId = textId;
+                const modal = document.getElementById('editTextModal');
+                const input = document.getElementById('editTextInput');
+                
+                input.value = textOverlay.text;
+                modal.classList.add('active');
+                
+                setTimeout(() => {
+                    input.focus();
+                    input.select();
+                }, 100);
+            }
+
+            closeEditModal() {
+                const modal = document.getElementById('editTextModal');
+                modal.classList.remove('active');
+                this.editingTextId = null;
+            }
+
+            confirmEditText() {
+                if (!this.editingTextId) return;
+
+                const textOverlay = this.textOverlays.find(t => t.id === this.editingTextId);
+                const input = document.getElementById('editTextInput');
+                const newText = input.value.trim();
+
+                if (textOverlay && newText) {
+                    textOverlay.text = newText;
+                    this.projectModified = true;
+                    this.renderTextList();
+                    this.renderCanvas();
+                    this.updateProjectInfo();
+                }
+
+                this.closeEditModal();
+            }
+
+            removeTextOverlay(textId) {
+                this.textOverlays = this.textOverlays.filter(t => t.id !== textId);
+                this.projectModified = true;
+                this.renderTextList();
+                this.renderCanvas();
+                this.updateExportButton();
+                this.updateProjectInfo();
+            }
+
+            setBackground(imageId) {
+                const imageData = this.images.get(imageId);
+                if (!imageData) return;
+
+                this.backgroundImage = imageData;
+                this.projectModified = true;
+                this.updateResolutionInfo();
+                this.renderCanvas();
+                this.renderImageList();
+                this.updateExportButton();
+                this.updateProjectInfo();
+            }
+
+            addOverlay(imageId) {
+                const imageData = this.images.get(imageId);
+                if (!imageData) return;
+
+                const defaultSize = 120;
+                const height = defaultSize / imageData.aspectRatio;
+
+                const overlay = {
+                    id: `overlay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    imageData: imageData,
+                    x: 50,
+                    y: 50,
+                    width: defaultSize,
+                    height: height,
+                    aspectRatio: imageData.aspectRatio,
+                    rotation: 0
+                };
+
+                this.overlayImages.push(overlay);
+                this.projectModified = true;
+                this.renderCanvas();
+                this.updateExportButton();
+                this.updateProjectInfo();
+            }
+
+            updateResolutionInfo() {
+                const infoPanel = document.getElementById('resolutionInfo');
+                const textSpan = document.getElementById('resolutionText');
+                
+                if (this.backgroundImage) {
+                    textSpan.textContent = `${this.backgroundImage.naturalWidth} × ${this.backgroundImage.naturalHeight} pixels`;
+                    infoPanel.style.display = 'block';
+                } else {
+                    infoPanel.style.display = 'none';
+                }
+            }
+
+            renderCanvas() {
+                const container = document.getElementById('canvasContainer');
+                container.innerHTML = '';
+
+                if (!this.backgroundImage) {
+                    this.renderEmptyState(container);
+                    return;
+                }
+
+                this.renderBackground(container);
+                this.renderOverlays(container);
+                this.renderTextOverlays(container);
+            }
+
+            renderEmptyState(container) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-state-icon">🎨</span>
+                        <h3>Start Your Composition</h3>
+                        <p>Select a background image to begin</p>
+                        <small>Add images and text overlays</small>
+                        <small>Save and load complete projects</small>
+                    </div>
+                `;
+            }
+
+            renderBackground(container) {
+                const bgImg = document.createElement('img');
+                bgImg.src = this.backgroundImage.src;
+                bgImg.className = 'background-image';
+                bgImg.alt = 'Background';
+                
+                bgImg.onload = () => {
+                    this.backgroundElement = bgImg;
+                    this.calculateBackgroundDisplay();
+                };
+                
+                container.appendChild(bgImg);
+            }
+
+            calculateBackgroundDisplay() {
+                if (!this.backgroundElement || !this.containerRect) return;
+
+                this.updateContainerRect();
+                
+                const containerWidth = this.containerRect.width;
+                const containerHeight = this.containerRect.height;
+                const imageAspect = this.backgroundImage.aspectRatio;
+                const containerAspect = containerWidth / containerHeight;
+
+                if (imageAspect > containerAspect) {
+                    this.backgroundDisplay.displayWidth = containerWidth;
+                    this.backgroundDisplay.displayHeight = containerWidth / imageAspect;
+                    this.backgroundDisplay.offsetX = 0;
+                    this.backgroundDisplay.offsetY = (containerHeight - this.backgroundDisplay.displayHeight) / 2;
+                } else {
+                    this.backgroundDisplay.displayHeight = containerHeight;
+                    this.backgroundDisplay.displayWidth = containerHeight * imageAspect;
+                    this.backgroundDisplay.offsetX = (containerWidth - this.backgroundDisplay.displayWidth) / 2;
+                    this.backgroundDisplay.offsetY = 0;
+                }
+
+                this.backgroundDisplay.naturalWidth = this.backgroundImage.naturalWidth;
+                this.backgroundDisplay.naturalHeight = this.backgroundImage.naturalHeight;
+                this.backgroundDisplay.scale = this.backgroundDisplay.naturalWidth / this.backgroundDisplay.displayWidth;
+            }
+
+            recalculateBackgroundDisplay() {
+                if (this.backgroundElement) {
+                    this.calculateBackgroundDisplay();
+                }
+            }
+
+            renderOverlays(container) {
+                this.overlayImages.forEach(overlay => {
+                    const element = this.createOverlayElement(overlay);
+                    container.appendChild(element);
+                });
+            }
+
+            renderTextOverlays(container) {
+                this.textOverlays.forEach(textOverlay => {
+                    const element = this.createTextOverlayElement(textOverlay);
+                    container.appendChild(element);
+                });
+            }
+
+            createOverlayElement(overlay) {
+                const element = document.createElement('div');
+                element.className = 'overlay-image';
+                element.dataset.overlayId = overlay.id;
+                element.dataset.overlayType = 'image';
+                element.style.left = `${overlay.x}px`;
+                element.style.top = `${overlay.y}px`;
+                element.style.width = `${overlay.width}px`;
+                element.style.height = `${overlay.height}px`;
+                element.style.transform = `rotate(${overlay.rotation}deg)`;
+
+                const img = document.createElement('img');
+                img.src = overlay.imageData.src;
+                img.alt = overlay.imageData.name;
+                element.appendChild(img);
+
+                const indicator = document.createElement('div');
+                indicator.className = 'aspect-ratio-indicator';
+                indicator.textContent = overlay.aspectRatio.toFixed(2);
+                element.appendChild(indicator);
+
+                this.addResizeHandles(element);
+
+                return element;
+            }
+
+            createTextOverlayElement(textOverlay) {
+                const element = document.createElement('div');
+                element.className = 'overlay-text';
+                element.dataset.overlayId = textOverlay.id;
+                element.dataset.overlayType = 'text';
+                element.style.left = `${textOverlay.x}px`;
+                element.style.top = `${textOverlay.y}px`;
+                element.style.fontSize = `${textOverlay.fontSize}px`;
+                element.style.fontFamily = textOverlay.fontFamily;
+                element.style.color = textOverlay.color;
+                element.style.transform = `rotate(${textOverlay.rotation}deg)`;
+
+                const textContent = document.createElement('div');
+                textContent.className = 'text-content';
+                textContent.textContent = textOverlay.text;
+                element.appendChild(textContent);
+
+                const indicator = document.createElement('div');
+                indicator.className = 'aspect-ratio-indicator text-indicator';
+                indicator.textContent = `${textOverlay.fontSize}px`;
+                element.appendChild(indicator);
+
+                this.addTextResizeHandles(element);
+
+                return element;
+            }
+
+            addResizeHandles(element) {
+                ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(position => {
+                    const handle = document.createElement('div');
+                    handle.className = `resize-handle ${position}`;
+                    handle.dataset.position = position;
+                    element.appendChild(handle);
+                });
+            }
+
+            addTextResizeHandles(element) {
+                ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(position => {
+                    const handle = document.createElement('div');
+                    handle.className = `resize-handle text-resize-handle ${position}`;
+                    handle.dataset.position = position;
+                    element.appendChild(handle);
+                });
+            }
+
+            handlePointerDown(event) {
+                this.updateContainerRect();
+                
+                if (event.target.classList.contains('resize-handle')) {
+                    this.startResize(event);
+                } else if (this.isOverlayTarget(event.target)) {
+                    this.startDrag(event);
+                }
+            }
+
+            isOverlayTarget(element) {
+                return element.classList.contains('overlay-image') || 
+                       element.classList.contains('overlay-text') || 
+                       element.closest('.overlay-image') || 
+                       element.closest('.overlay-text');
+            }
+
+            startResize(event) {
+                event.preventDefault();
+                
+                const handle = event.target;
+                const overlayElement = handle.closest('.overlay-image') || handle.closest('.overlay-text');
+                const overlayId = overlayElement.dataset.overlayId;
+                const overlayType = overlayElement.dataset.overlayType;
+                
+                let overlay;
+                if (overlayType === 'image') {
+                    overlay = this.overlayImages.find(o => o.id === overlayId);
+                } else {
+                    overlay = this.textOverlays.find(t => t.id === overlayId);
+                }
+                
+                if (!overlay) return;
+
+                this.isResizing = true;
+                this.selectedOverlay = overlayType === 'image' ? overlay : null;
+                this.selectedText = overlayType === 'text' ? overlay : null;
+                
+                this.resizeData = {
+                    overlay: overlay,
+                    overlayType: overlayType,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    startWidth: overlayType === 'image' ? overlay.width : null,
+                    startHeight: overlayType === 'image' ? overlay.height : null,
+                    startFontSize: overlayType === 'text' ? overlay.fontSize : null,
+                    startPosX: overlay.x,
+                    startPosY: overlay.y,
+                    handle: handle.dataset.position,
+                    aspectRatio: overlayType === 'image' ? overlay.aspectRatio : null
+                };
+
+                this.updateSelection(overlayElement);
+                document.body.style.cursor = getComputedStyle(handle).cursor;
+            }
+
+            startDrag(event) {
+                event.preventDefault();
+                
+                const overlayElement = event.target.closest('.overlay-image') || event.target.closest('.overlay-text');
+                const overlayId = overlayElement.dataset.overlayId;
+                const overlayType = overlayElement.dataset.overlayType;
+                
+                let overlay;
+                if (overlayType === 'image') {
+                    overlay = this.overlayImages.find(o => o.id === overlayId);
+                } else {
+                    overlay = this.textOverlays.find(t => t.id === overlayId);
+                }
+                
+                if (!overlay) return;
+
+                this.isDragging = true;
+                this.selectedOverlay = overlayType === 'image' ? overlay : null;
+                this.selectedText = overlayType === 'text' ? overlay : null;
+                
+                const rect = overlayElement.getBoundingClientRect();
+                this.dragStart = {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                };
+
+                this.updateSelection(overlayElement);
+                document.body.style.cursor = 'move';
+            }
+
+            handlePointerMove(event) {
+                if (this.isResizing) {
+                    this.performResize(event);
+                } else if (this.isDragging) {
+                    this.performDrag(event);
+                }
+            }
+
+            performResize(event) {
+                if (!this.resizeData) return;
+
+                const deltaX = event.clientX - this.resizeData.startX;
+                const deltaY = event.clientY - this.resizeData.startY;
+                const handle = this.resizeData.handle;
+
+                if (this.resizeData.overlayType === 'image') {
+                    this.performImageResize(deltaX, deltaY, handle);
+                } else {
+                    this.performTextResize(deltaX, deltaY, handle);
+                }
+
+                this.projectModified = true;
+                this.renderCanvas();
+                this.updateProjectInfo();
+            }
+
+            performImageResize(deltaX, deltaY, handle) {
+                const aspectRatio = this.resizeData.aspectRatio;
+                let sizeChange = 0;
+                
+                switch (handle) {
+                    case 'bottom-right':
+                        sizeChange = Math.max(deltaX, deltaY);
+                        break;
+                    case 'top-left':
+                        sizeChange = -Math.max(deltaX, deltaY);
+                        break;
+                    case 'top-right':
+                        sizeChange = Math.max(deltaX, -deltaY);
+                        break;
+                    case 'bottom-left':
+                        sizeChange = Math.max(-deltaX, deltaY);
+                        break;
+                }
+
+                const newWidth = Math.max(30, this.resizeData.startWidth + sizeChange);
+                const newHeight = newWidth / aspectRatio;
+
+                this.resizeData.overlay.width = newWidth;
+                this.resizeData.overlay.height = newHeight;
+
+                if (handle.includes('left')) {
+                    this.resizeData.overlay.x = this.resizeData.startPosX - (newWidth - this.resizeData.startWidth);
+                }
+                if (handle.includes('top')) {
+                    this.resizeData.overlay.y = this.resizeData.startPosY - (newHeight - this.resizeData.startHeight);
+                }
+            }
+
+            performTextResize(deltaX, deltaY, handle) {
+                let sizeChange = 0;
+                
+                switch (handle) {
+                    case 'bottom-right':
+                        sizeChange = Math.max(deltaX, deltaY);
+                        break;
+                    case 'top-left':
+                        sizeChange = -Math.max(deltaX, deltaY);
+                        break;
+                    case 'top-right':
+                        sizeChange = Math.max(deltaX, -deltaY);
+                        break;
+                    case 'bottom-left':
+                        sizeChange = Math.max(-deltaX, deltaY);
+                        break;
+                }
+
+                const newFontSize = Math.max(12, Math.min(120, this.resizeData.startFontSize + sizeChange / 3));
+                this.resizeData.overlay.fontSize = newFontSize;
+            }
+
+            performDrag(event) {
+                const selectedItem = this.selectedOverlay || this.selectedText;
+                if (!selectedItem) return;
+
+                const newX = event.clientX - this.containerRect.left - this.dragStart.x;
+                const newY = event.clientY - this.containerRect.top - this.dragStart.y;
+
+                const maxX = this.containerRect.width - (this.selectedOverlay ? this.selectedOverlay.width : 200);
+                const maxY = this.containerRect.height - (this.selectedOverlay ? this.selectedOverlay.height : 50);
+
+                selectedItem.x = Math.max(0, Math.min(maxX, newX));
+                selectedItem.y = Math.max(0, Math.min(maxY, newY));
+
+                this.projectModified = true;
+                this.renderCanvas();
+                this.updateProjectInfo();
+            }
+
+            handlePointerUp(event) {
+                this.isDragging = false;
+                this.isResizing = false;
+                this.resizeData = null;
+                this.selectedOverlay = null;
+                this.selectedText = null;
+                document.body.style.cursor = '';
+            }
+
+            updateSelection(selectedElement) {
+                document.querySelectorAll('.overlay-image, .overlay-text').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                selectedElement.classList.add('selected');
+            }
+
+            updateExportButton() {
+                const button = document.getElementById('exportBtn');
+                button.disabled = !this.backgroundImage;
+            }
+
+            async exportComposition() {
+                if (!this.backgroundImage) return;
+
+                try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    canvas.width = this.backgroundDisplay.naturalWidth;
+                    canvas.height = this.backgroundDisplay.naturalHeight;
+
+                    await this.drawImageToCanvas(ctx, this.backgroundImage.src, 0, 0, canvas.width, canvas.height);
+
+                    for (const overlay of this.overlayImages) {
+                        await this.drawOverlayToCanvas(ctx, overlay);
+                    }
+
+                    for (const textOverlay of this.textOverlays) {
+                        this.drawTextToCanvas(ctx, textOverlay);
+                    }
+
+                    this.downloadCanvas(canvas);
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    this.showNotification('error', 'Export Failed', 'Failed to export composition. Please try again.');
+                }
+            }
+
+            drawImageToCanvas(ctx, src, x, y, width, height) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.drawImage(img, x, y, width, height);
+                        resolve();
+                    };
+                    img.src = src;
+                });
+            }
+
+            async drawOverlayToCanvas(ctx, overlay) {
+                const relativeX = overlay.x - this.backgroundDisplay.offsetX;
+                const relativeY = overlay.y - this.backgroundDisplay.offsetY;
+                
+                const scaledX = relativeX * this.backgroundDisplay.scale;
+                const scaledY = relativeY * this.backgroundDisplay.scale;
+                const scaledWidth = overlay.width * this.backgroundDisplay.scale;
+                const scaledHeight = overlay.height * this.backgroundDisplay.scale;
+
+                if (relativeX + overlay.width > 0 && relativeY + overlay.height > 0 &&
+                    relativeX < this.backgroundDisplay.displayWidth && relativeY < this.backgroundDisplay.displayHeight) {
+                    
+                    ctx.save();
+                    ctx.translate(scaledX + scaledWidth / 2, scaledY + scaledHeight / 2);
+                    ctx.rotate((overlay.rotation * Math.PI) / 180);
+                    
+                    await this.drawImageToCanvas(
+                        ctx,
+                        overlay.imageData.src,
+                        -scaledWidth / 2,
+                        -scaledHeight / 2,
+                        scaledWidth,
+                        scaledHeight
+                    );
+                    
+                    ctx.restore();
+                }
+            }
+
+            drawTextToCanvas(ctx, textOverlay) {
+                const relativeX = textOverlay.x - this.backgroundDisplay.offsetX;
+                const relativeY = textOverlay.y - this.backgroundDisplay.offsetY;
+                
+                const scaledX = relativeX * this.backgroundDisplay.scale;
+                const scaledY = relativeY * this.backgroundDisplay.scale;
+                const scaledFontSize = textOverlay.fontSize * this.backgroundDisplay.scale;
+
+                if (relativeX > -200 && relativeY > -50 &&
+                    relativeX < this.backgroundDisplay.displayWidth + 200 && 
+                    relativeY < this.backgroundDisplay.displayHeight + 50) {
+                    
+                    ctx.save();
+                    
+                    ctx.font = `600 ${scaledFontSize}px ${textOverlay.fontFamily}`;
+                    ctx.fillStyle = textOverlay.color;
+                    ctx.textBaseline = 'top';
+                    
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = Math.max(2, scaledFontSize / 12);
+                    ctx.shadowOffsetX = Math.max(1, scaledFontSize / 24);
+                    ctx.shadowOffsetY = Math.max(1, scaledFontSize / 24);
+                    
+                    const textMetrics = ctx.measureText(textOverlay.text);
+                    const textWidth = textMetrics.width;
+                    const textHeight = scaledFontSize;
+                    
+                    ctx.translate(scaledX + textWidth / 2, scaledY + textHeight / 2);
+                    ctx.rotate((textOverlay.rotation * Math.PI) / 180);
+                    ctx.fillText(textOverlay.text, -textWidth / 2, -textHeight / 2);
+                    
+                    ctx.restore();
+                }
+            }
+
+            downloadCanvas(canvas) {
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${this.projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date().getTime()}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            }
+        }
+
+        // Initialize the composer
+        const composer = new XsukaxImageComposer();
+    </script>
+</body>
+</html>
