@@ -7,7 +7,7 @@
 
 A professional, client-side image composition tool that enables users to create stunning visual compositions with pixel-perfect positioning, aspect ratio preservation, and comprehensive project management capabilities.
 
-![xsukax Image Composer](https://img.shields.io/badge/xsukax-Image%20Composer-green.svg)
+![xsukax Image Composer](https://badge.xsukax.net/?badge=xsukax-Image%20Composer-grey-green.svg)
 
 ## 🎯 Project Overview
 
